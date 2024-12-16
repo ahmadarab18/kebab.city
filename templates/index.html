@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City Kebab and Pizza House</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <div class="logo-container me-2">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="20" cy="20" r="20" fill="#FF4B6E"/>
+                        <path d="M8 20C8 13.3726 13.3726 8 20 8C26.6274 8 32 13.3726 32 20C32 26.6274 26.6274 32 20 32C13.3726 32 8 26.6274 8 20Z" fill="white"/>
+                        <path d="M15 16L25 16M15 20L25 20M15 24L25 24" stroke="#FF4B6E" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M20 12V28M16 12L24 28" stroke="#FF4B6E" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">City Kebab</span>
+                    <span class="brand-subtitle">& Pizza House</span>
+                </div>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#pizzas">Pizzas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#kebabs">Kebabs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#burgers">Burgers</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <a href="tel:+1234567890" class="text-white me-3">
+                        <i class="fas fa-phone-alt"></i> Order by Phone
+                    </a>
+                    <button class="btn btn-outline-light" type="button" data-bs-toggle="modal" data-bs-target="#cartModal">
+                        <i class="fas fa-shopping-cart"></i> Cart
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section text-center py-5">
+        <div class="container">
+            <h1>City Kebab & Pizza House</h1>
+            <p class="lead">Authentic Turkish Kebabs & Italian Pizzas • Since 1995</p>
+            <a href="#pizzas" class="btn btn-primary btn-lg mt-4 smooth-scroll">Order Now</a>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Menu Section -->
+            <div class="col-lg-8">
+                <div class="menu-section">
+                    <section id="pizzas" class="mb-5">
+                        <h2 class="section-title">Pizzas</h2>
+                        <div class="row">
+                            {% for pizza in menu.pizzas %}
+                            <div class="col-md-6 mb-3">
+                                <div class="food-card">
+                                    {% if pizza.image %}
+                                    <img src="{{ pizza.image }}" class="food-img" alt="{{ pizza.name }}">
+                                    {% else %}
+                                    <img src="{{ url_for('static', filename='images/pizza-placeholder.jpg') }}" class="food-img" alt="{{ pizza.name }}">
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ pizza.name }}</h5>
+                                        <p class="card-text">{{ pizza.description }}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="price">£{{ "%.2f"|format(pizza.price) }}</span>
+                                        </div>
+                                        <button class="btn btn-primary add-to-cart" 
+                                                data-id="{{ pizza.id }}"
+                                                data-name="{{ pizza.name }}"
+                                                data-price="{{ pizza.price }}">
+                                            <i class="fas fa-plus"></i> Add to Cart
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <section id="kebabs" class="mb-5">
+                        <h2 class="section-title">Kebabs</h2>
+                        <div class="row">
+                            {% for kebab in menu.kebabs %}
+                            <div class="col-md-6 mb-3">
+                                <div class="food-card">
+                                    {% if kebab.image %}
+                                    <img src="{{ kebab.image }}" class="food-img" alt="{{ kebab.name }}">
+                                    {% else %}
+                                    <img src="{{ url_for('static', filename='images/kebab-placeholder.jpg') }}" class="food-img" alt="{{ kebab.name }}">
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ kebab.name }}</h5>
+                                        <p class="card-text">{{ kebab.description }}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="price">£{{ "%.2f"|format(kebab.price) }}</span>
+                                        </div>
+                                        <button class="btn btn-primary add-to-cart"
+                                                data-id="{{ kebab.id }}"
+                                                data-name="{{ kebab.name }}"
+                                                data-price="{{ kebab.price }}">
+                                            <i class="fas fa-plus"></i> Add to Cart
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <section id="burgers" class="mb-5">
+                        <h2 class="section-title">Burgers</h2>
+                        <div class="row">
+                            {% for burger in menu.burgers %}
+                            <div class="col-md-6 mb-3">
+                                <div class="food-card">
+                                    {% if burger.image %}
+                                    <img src="{{ burger.image }}" class="food-img" alt="{{ burger.name }}">
+                                    {% else %}
+                                    <img src="{{ url_for('static', filename='images/burger-placeholder.jpg') }}" class="food-img" alt="{{ burger.name }}">
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ burger.name }}</h5>
+                                        <p class="card-text">{{ burger.description }}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="price">£{{ "%.2f"|format(burger.price) }}</span>
+                                        </div>
+                                        <button class="btn btn-primary add-to-cart"
+                                                data-id="{{ burger.id }}"
+                                                data-name="{{ burger.name }}"
+                                                data-price="{{ burger.price }}">
+                                            <i class="fas fa-plus"></i> Add to Cart
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Cart Modal -->
+            <div class="modal fade" id="cartModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Your Order</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="cart-items"></div>
+                            <div class="mt-3">
+                                <h5>Total: £<span id="cart-total">0.00</span></h5>
+                            </div>
+                            <div class="mt-3">
+                                <select id="order-type" class="form-select mb-3">
+                                    <option value="collection">Collection</option>
+                                    <option value="delivery">Delivery</option>
+                                </select>
+                                <div id="delivery-address" style="display: none;">
+                                    <textarea class="form-control mb-3" placeholder="Delivery Address"></textarea>
+                                </div>
+                                <div id="payment-element"></div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button id="checkout-button" class="btn btn-success">Checkout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="footer-brand mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="me-2">
+                                <circle cx="20" cy="20" r="20" fill="white"/>
+                                <path d="M8 20C8 13.3726 13.3726 8 20 8C26.6274 8 32 13.3726 32 20C32 26.6274 26.6274 32 20 32C13.3726 32 8 26.6274 8 20Z" fill="#FF4B6E"/>
+                                <path d="M15 16L25 16M15 20L25 20M15 24L25 24" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M20 12V28M16 12L24 28" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            <div class="brand-text">
+                                <span class="brand-title text-white">City Kebab</span>
+                                <span class="brand-subtitle text-white-50">& Pizza House</span>
+                            </div>
+                        </div>
+                        <p class="text-white-50">Serving authentic Turkish kebabs and Italian pizzas since 1995. Quality ingredients, traditional recipes, and a taste of home.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <h5 class="footer-heading">Opening Hours</h5>
+                    <div class="opening-hours">
+                        <div class="hours-group">
+                            <div class="hours-item">
+                                <span class="days">Sunday - Thursday</span>
+                                <span class="time">11:00 AM - 2:00 AM</span>
+                            </div>
+                            <div class="hours-item highlight">
+                                <span class="days">Friday - Saturday</span>
+                                <span class="time">11:00 AM - 4:00 AM</span>
+                            </div>
+                        </div>
+                        <div class="open-badge">
+                            <span class="badge">Open Now</span>
+                            <p class="delivery-info">Free delivery on orders over £30</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <h5 class="footer-heading">Contact & Location</h5>
+                    <div class="contact-info">
+                        <div class="info-item">
+                            <i class="fas fa-phone-alt"></i>
+                            <span>0121 236 9991</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>29 Constitution Hill<br>Hockley, Birmingham<br>B19 3BN</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>order@citykebab.co.uk</span>
+                        </div>
+                    </div>
+                    <div class="social-links mt-4">
+                        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <p class="copyright mb-0"> 2024 City Kebab & Pizza House. All rights reserved.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="payment-methods text-md-end">
+                            <i class="fab fa-cc-visa"></i>
+                            <i class="fab fa-cc-mastercard"></i>
+                            <i class="fab fa-cc-amex"></i>
+                            <i class="fab fa-apple-pay"></i>
+                            <i class="fab fa-google-pay"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        // Add smooth scrolling to all links with smooth-scroll class
+        document.querySelectorAll('.smooth-scroll').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add smooth loading animation to images
+        document.addEventListener('DOMContentLoaded', function() {
+            const images = document.querySelectorAll('img');
+            images.forEach(img => {
+                img.addEventListener('load', function() {
+                    this.classList.add('loaded');
+                });
+                if (img.complete) {
+                    img.classList.add('loaded');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
