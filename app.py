@@ -7,6 +7,7 @@ import json
 import stripe
 from dotenv import load_dotenv
 import requests
+from utils.printer import ReceiptPrinter
 
 load_dotenv()
 
@@ -23,6 +24,9 @@ login_manager.login_view = 'login'
 
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 UNSPLASH_ACCESS_KEY = os.getenv('UNSPLASH_ACCESS_KEY', 'YOUR_UNSPLASH_ACCESS_KEY')
+
+# Initialize printer
+printer = ReceiptPrinter()
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -119,6 +123,27 @@ def create_payment():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
+@app.route('/submit-order', methods=['POST'])
+def submit_order():
+    try:
+        order_data = request.json
+        
+        # Save order to database (your existing code)
+        
+        # Print order receipt
+        printer.print_order(order_data)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Order received and printed successfully!'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error processing order: {str(e)}'
+        }), 500
+
 @app.route('/signup', methods=['POST'])
 def signup():
     if request.method == 'POST':
@@ -171,6 +196,19 @@ def logout():
 @login_required
 def profile():
     return render_template('profile.html')
+
+@app.route('/test-printer')
+def test_printer():
+    if printer.test_print():
+        return jsonify({
+            'success': True,
+            'message': 'Printer test successful!'
+        }), 200
+    else:
+        return jsonify({
+            'success': False,
+            'message': 'Printer test failed. Check printer connection.'
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
