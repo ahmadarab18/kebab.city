@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
+from flask import Flask, render_template, jsonify, request, redirect, url_for, flash, send_from_directory, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash
 from models import db, User
@@ -209,6 +209,17 @@ def test_printer():
             'success': False,
             'message': 'Printer test failed. Check printer connection.'
         }), 500
+
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory('static', 'manifest.json', mimetype='application/json')
+
+@app.route('/sw.js')
+def service_worker():
+    response = make_response(send_from_directory('static', 'sw.js'))
+    response.headers['Cache-Control'] = 'no-cache'
+    response.headers['Content-Type'] = 'application/javascript'
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True)

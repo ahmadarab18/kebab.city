@@ -454,3 +454,47 @@ document.getElementById('checkoutBtn').addEventListener('click', async function(
         alert('There was an error processing your payment. Please try again.');
     }
 });
+
+// PWA Install Prompt
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent Chrome 67 and earlier from automatically showing the prompt
+    e.preventDefault();
+    // Stash the event so it can be triggered later
+    deferredPrompt = e;
+    // Show the install button
+    showInstallButton();
+});
+
+function showInstallButton() {
+    // Create install button if it doesn't exist
+    if (!document.getElementById('installButton')) {
+        const installButton = document.createElement('button');
+        installButton.id = 'installButton';
+        installButton.className = 'btn btn-primary position-fixed bottom-0 end-0 m-4';
+        installButton.innerHTML = '<i class="fas fa-download me-2"></i>Install App';
+        installButton.style.zIndex = '1000';
+        document.body.appendChild(installButton);
+
+        installButton.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                // Show the install prompt
+                deferredPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                const { outcome } = await deferredPrompt.userChoice;
+                // We no longer need the prompt. Clear it up
+                deferredPrompt = null;
+                // Hide the install button
+                installButton.style.display = 'none';
+            }
+        });
+    }
+}
+
+// Hide the install button when the PWA is installed
+window.addEventListener('appinstalled', (evt) => {
+    if (document.getElementById('installButton')) {
+        document.getElementById('installButton').style.display = 'none';
+    }
+});

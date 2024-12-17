@@ -841,3 +841,24 @@ img.loaded {
     margin-bottom: 10px;
     min-width: 200px;
 }
+
+/* PWA Install Button */
+#installButton {
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+#installButton:hover {
+    animation: none;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
