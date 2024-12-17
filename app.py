@@ -1,14 +1,36 @@
-from flask import Flask, render_template, request, jsonify
-import stripe
+from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash
+from models import db, User
 import os
+import json
+import stripe
 from dotenv import load_dotenv
 import requests
 
 load_dotenv()
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize extensions
+db.init_app(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 UNSPLASH_ACCESS_KEY = os.getenv('UNSPLASH_ACCESS_KEY', 'YOUR_UNSPLASH_ACCESS_KEY')
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# Create database tables
+with app.app_context():
+    db.create_all()
 
 def get_unsplash_image(query):
     url = f"https://api.unsplash.com/search/photos"
@@ -96,6 +118,59 @@ def create_payment():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+        password = request.form.get('password')
+
+        if User.query.filter_by(email=email).first():
+            flash('Email already registered')
+            return redirect(url_for('index'))
+
+        user = User(
+            name=name,
+            email=email,
+            phone=phone
+        )
+        user.set_password(password)
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        login_user(user)
+        flash('Successfully signed up!')
+        return redirect(url_for('index'))
+
+@app.route('/login', methods=['POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        user = User.query.filter_by(email=email).first()
+        if user and user.check_password(password):
+            login_user(user)
+            flash('Successfully logged in!')
+            return redirect(url_for('index'))
+        
+        flash('Invalid email or password')
+    return redirect(url_for('index'))
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Successfully logged out!')
+    return redirect(url_for('index'))
+
+@app.route('/profile')
+@login_required
+def profile():
+    return render_template('profile.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
